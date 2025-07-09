@@ -1,0 +1,2 @@
+../Src/encoder.c:12:6:encoder_init	16	static
+../Src/encoder.c:45:10:encoder_read	4	static

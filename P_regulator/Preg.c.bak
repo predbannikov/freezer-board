@@ -1,0 +1,895 @@
+
+#include "Preg.h"
+
+int flag_otladka=0;
+const double T_off_cnst = 0.5;
+
+int Enbl_Motor(_Bool St)
+{
+    if(St)// Включаем таймер
+    TIM_Cmd(TIM3, ENABLE);
+		else
+	   TIM_Cmd(TIM3, DISABLE);
+
+}
+
+int Starter2(uint16_t ADC, int status)
+{
+	
+	//if(Status_Starter(ADC)==2)
+							if((status!=0x1)||(status!=0x2))
+								{ if((ADC>=TOK_ZAPUSKA))  //&&(	 Menu.SetPWR>1900) ) 
+									{ 
+										Start; 
+											DELAY500
+										Stop; 
+										 DELAY1000
+											DELAY1000
+										// DELAY1000
+													
+								 starter_second=0;
+									status=2;	
+								 return  2;
+									}
+									else
+										Stop;
+	            	}
+	 
+	if((ADC > TOK_RABOTY) && (ADC < 1300))	
+	{status =1;return 1; 	}  //работает
+	
+	if(((ADC>=1700))&&(starter_second>=2))
+	{Stop;
+		Menu.SetPWR=0;
+		starter_second=0;
+		DELAY1000;
+		DELAY1000;
+		DELAY1000;
+	}
+			
+return -1; 			
+}
+
+int Stat_Starter(uint16_t ADC)
+{
+ 	if((ADC > 1000) && (ADC < 1300))	
+	{  return 1; 	}  //работает
+
+	else if(ADC < 1000)
+	{ return 2; 	}  //ожидание отключен
+
+	else return -1;
+}
+//************************************************ 
+void Stabilizacij(double *Tcurent,double *Tstop,double *Limit_delt)
+{	//int time=10;//iTime_hold_target=iTime_hold_target+10;
+ /*if(delta > Limit_delt)  
+							{  
+							 SW2=TRUE;
+							 First_in=TRUE;
+							 cnt_work_pump=0;
+							}  
+*/
+//*************************
+                 /*          if((delta>=0.01) && (delta<=0.19))
+												           cmd_quiui=	adjust( 33, 15,2055,55);//20/25
+													 else if(delta ==0.00)
+													         cmd_quiui=	adjust( 10, 10,2057,57);	 
+													 else if((delta< 0.00) && (delta >= -0.12))
+													         cmd_quiui=	adjust( 14, 14,2056,56);	 
+                          else 
+                             Menu.SetPWR=0;*/
+													
+	              if(First_in==TRUE)//попали в полку первый раз
+														 {cnt_adjust=0;
+														 Menu.SetPWR=0;
+																	 First_in=FALSE;
+															 SW2=TRUE;
+														 }
+												else
+														 {
+															 if(SW2==TRUE)
+															 {
+																if(cnt_adjust>20) // пока не пройдет пауза. нижняя полка
+																{   cnt_adjust=0;
+																SW2=FALSE;
+																}
+															 }
+														else	 
+														{
+															
+												//	if((delta>=-0.13)&& (delta<=0.38)) 
+															if((delta>=-0.4)&& (delta<=0.4)) 
+															{
+														  cmd_quiui= 	adjust( 14, 26,2333,22);
+																												
+															}	
+															else
+															{Menu.SetPWR=0;
+																cnt_adjust=0;
+															}
+														/*	if((delta>=-0.06) && (delta<0))
+															{
+															cmd_quiui=		adjust( 10, 26,2222,11);
+															}
+															else	if((delta>=0.0)&& (delta<=0.06)) 
+															{
+														  cmd_quiui= 	adjust( 14, 26,2333,22);
+																												
+															}
+															else	if((delta>0.06)&& (delta<=0.12)) 
+															{
+														   cmd_quiui=	adjust( 20, 20,2333,33);
+																												
+															}
+															else	if((delta>=0.13)&& (delta<=0.38)) 
+															{
+														  cmd_quiui= 	adjust( 36, 26,2333,44);
+																												
+															}*/
+														}	
+															
+													  }								
+													 
+}
+
+		
+//************************
+int adjust( int TimingWork,int TimigPause, double p, int que)
+{
+ 
+	  //самоблокировка вызова пока не отработает предыдущий вызов
+if((adc_pa1<1000))
+	{	
+        if(( cnt_adjust >=0 ) && ( cnt_adjust <  TimingWork ) )
+					 { MotorStart;//	Menu.SetPWR=p;  
+						 que=1;
+					 }
+				 
+			else	if(cnt_adjust >= TimingWork)
+					 {   
+						  que=2;
+					  MotorStop;// Menu.SetPWR=0;
+					 }
+	 
+	}
+			if(cnt_adjust>=(TimingWork+TimigPause))
+				  {  cnt_adjust=0;
+						MotorStop;// Menu.SetPWR=0;
+					//	Str=0;
+					 que=0;
+					}
+	
+return que;
+}		
+double tmp,delt_tmp;
+int polka(double *Tc, double *Ts, double *Plka, double *Toff,int *Thold,_Bool *On)
+{
+volatile	double Tcur =*Tc;
+	        double Tstp =*Ts;
+          double T_off  = *Toff;
+        //  double Pl =*Plka;//	 =*Plka;
+          double Delta_min=Tcur-Tstp;	
+             int iTime_hol_polka = *Thold;	
+	         _Bool Sw =*On;
+	
+	//if(fabs(Delta) >=0.12)
+//diapazon	= cnt_polka-preCnt;//fabs(Tstp-Polka);
+if(delta_max > Tcur)
+		delta_max=Tcur;
+ 
+if(delta >= 0.6)
+{
+target_t=0;
+delta_max=0;
+}
+
+
+raznost_polka_tcar=	(tmp -Tcur);	
+		//   переход температуры на 0.06
+	if(((fabs(raznost_polka_tcar)>0.06)) && (delta>=0.12))
+	{		preCnt=	 cnt_polka=0;
+								tmp = Tcur;
+   }
+
+/*if((delta_max<=Tcur ) && (delta <= 0.2) &&(delta >= -0.2))
+{ 
+if(((cnt_polka-preCnt)>=20)&& (Sw==TRUE))
+	{	   SW4=TRUE;     
+									target_t=delta_max;//tmp;
+									delt_tmp = Menu.TemperStop-delta_max;//tmp;
+		if(delt_tmp>0)
+	            			  T_off=T_off_cnst-delt_tmp; 
+		else 
+		                 T_off=T_off_cnst+delt_tmp;
+		
+		             *Toff=T_off;
+							  *Thold =iTime_hol_polka;
+		           //Sw=FALSE;	
+	            // 	*On=Sw;
+		             preCnt=0; 
+			           cnt_polka	=0;		
+			          delta_max=0;
+									return 2;
+		
+	}
+	if( SW4==TRUE)
+	{
+	 if(fabs(delta)<=0.07)
+	 {
+	 if(delt_tmp>0)
+	            			  T_off=T_off_cnst-delt_tmp; 
+		else 
+		                 T_off=T_off_cnst+delt_tmp;
+	 }
+	
+	}
+	
+	
+}	*/
+if((delta_max<=Tcur ))// && (fabs(delta) <= 0.12))
+{ SW4=TRUE; 
+
+					target_t=delta_max;//tmp;
+									delt_tmp = Menu.TemperStop-delta_max;//tmp;
+		if(delt_tmp>0)
+	            			  T_off=T_off_cnst-delt_tmp; 
+		else 
+		                 T_off=T_off_cnst+delt_tmp;
+		
+		             *Toff=T_off;
+							  *Thold =iTime_hol_polka;
+		           //Sw=FALSE;	
+	            // 	*On=Sw;
+		             preCnt=0; 
+			           cnt_polka	=0;		
+			          delta_max=0;
+									return 2;
+
+
+
+}
+/*else
+{delt_tmp = Menu.TemperStop-delta_max;
+if(delt_tmp>0)
+	            			  T_off=T_off_cnst-delt_tmp; 
+		else 
+		                 T_off=T_off_cnst+delt_tmp;
+		
+		             *Toff=T_off;
+							  *Thold =iTime_hol_polka;
+		           //Sw=FALSE;	
+	            // 	*On=Sw;
+		           //  preCnt=0; 
+			         //  cnt_polka	=0;		
+			        //  delta_max=0;
+
+
+
+}*/
+
+if(Limit_delt>0.6) Limit_delt=0.5;
+	
+	
+	
+else;
+	
+
+	
+if(delta < -0.22) 
+	     Menu.SetPWR=0; 
+
+	//if((Delta<=0.8)&&(Delta>=0.7)){ SW0=TRUE;		}
+
+	return -1;		
+	
+}
+//***********************************
+int Begin_calculate;
+int search_polka(double *Tc, double *Ts, double *Plka, double *Toff,int *Thold,_Bool *On)
+{
+	volatile	double Tcur =*Tc;
+	        double Tstp =*Ts;
+          double T_off  = *Toff;
+        //  double Pl =*Plka;//	 =*Plka;
+          double averege;	
+             int iTime_hol_polka = *Thold;	
+	int stat=0;
+	        // _Bool Sw =*On;
+ double max_amplitude,min_amplitude;
+
+	
+//delta=	Tcur - Menu.TemperStop;
+	delta=	pre_Tcur - Menu.TemperStop;
+if(delta>=Limit_delt){SW6=TRUE; SW3=TRUE;SW4=FALSE;Begin_calculate=1;delta_min=0; }
+//if(delta_max < Tcur)
+//		delta_max=Tcur;
+if(delta_min > pre_Tcur)delta_min=pre_Tcur;
+	
+if((pre_Tcur-Menu.TemperStop)>0.4){SW0=1;SW2=1;}//1****************  сделать провал*************************************
+
+//raznost_polka_tcar=fabs(delta-Limit_delt);
+
+
+
+//1
+if((SW0==1))// &&  (SW2=1)&&(SW0==TRUE))// && ( raznost_polka_tcar>0.07)) //max amplitude
+{ 
+	if((SW6==TRUE)&&(SW7==FALSE))//&& (adc_pa1 <=500))//sarter 
+				{ if(delta > -0.1)
+					   MotorStart;SW5=FALSE;flag_otladka=1;	
+			//	if(delta <=-0.1) SW0=0;
+					if(delta_min<pre_Tcur)
+					{	Limit_delt=Limit_delt+fabs(delta);
+							if((delta_min-fabs(Menu.TemperStop)<=0.07))SW0=0;
+					}
+					
+				}
+}
+
+
+/*else if((SW0==0)&&(pre_Tcur > Menu.TemperStop) && (delta >=0.25))//&&(SW0==TRUE))// && ( raznost_polka_tcar>0.07)) //max amplitude
+{
+	if((SW6==TRUE)&&(SW7==FALSE))//&& (adc_pa1 <=500))//sarter 
+				{MotorStart;SW5=FALSE;flag_otladka=2;	
+				
+				}
+}*/
+if((SW0==0)&&(delta>=-0.07)&&(delta<0.3))
+//else	if((SW0==0)&&(pre_Tcur <= Menu.TemperStop+0.1)&&(delta>=-0.13)/*&&(delta<=0.3)*/)// && ( raznost_polka_tcar>0.07)) //max amplitude
+	{ //Menu.SetPWR=2002;
+		if(delta>=0.12)
+		{adjust( 20, 20,2003,00);flag_otladka=31;	}// 14.26
+		else
+		{adjust( 14, 20,2003,00);flag_otladka=3;}
+	//	SW0=FALSE;
+	} 
+	
+
+	 else
+	{ MotorStop;Menu.SetPWR=0; 	flag_otladka=4;SW6=TRUE; SW7=FALSE;	}
+	
+	 
+
+//************************************************	
+	if((adc_pa1>=1100) && (SW6==TRUE))
+									{ SW6=FALSE;
+															SW7=TRUE;	
+  													     				 Start;	
+									//	for(int t=0;t<10000;t++);
+																					delay_ms(600); 
+																					Stop;	
+											               	delay_ms(500); 
+									starter_sec=0;
+									}
+	
+ if((adc_pa1 <= 550) && (starter_sec>=5))//&& (SW6==FALSE))
+{	SW6=TRUE;SW7=FALSE;starter_sec=0;}
+
+
+//if((adc_pa1 >= 600) && (adc_pa1 <= 1000))
+//{	/*SW6=TRUE;*/SW7=FALSE;starter_sec=0;}
+
+else ;	
+//**************************************************
+
+	
+	 if((fabs(pre_Tcur-Tcur) >0.07))
+  							pre_Tcur=Tcur;	
+	/*
+	if(Begin_calculate==1)
+					{
+					//cnt_second=0;
+					str_cnt_second=cnt_second;
+					Begin_calculate = 0;	
+						
+					}
+		 else
+					{
+						if((cnt_second-str_cnt_second)>=2)
+						{ 
+            if((fabs(pre_Tcur-Tcur) < 1 ) && (fabs(pre_Tcur-Tcur) >0.07))
+  							pre_Tcur=Tcur;
+						
+						
+							cnt_second=0;
+							Begin_calculate=1; 
+						}	
+	
+					}
+	
+*/
+
+
+
+
+
+
+	
+/*	else if((Tcur >= Menu.TemperStop) && (fabs(delta)<=0.2)) //max amplitude
+	{// Menu.SetPWR=2001;
+	//	delta_min=0;
+	//	SW3=TRUE; 
+	}*/
+	
+/*	  if(((delta_min-Menu.TemperStop) <=0.3) && ((delta_min-Menu.TemperStop) >= 0.0))
+	{ max_min[cnt_SW0-1][0]=delta_min;
+		//if(fabs(delta_min-Menu.TemperStop) <=0.1)
+	    // SW3=TRUE;
+	}
+	 else
+	{ Menu.SetPWR=0;
+		
+	}
+	 */  
+	//deltta <=0
+	/*if((Tcur < Menu.TemperStop) && (SW3==TRUE))//ПРОЛЕТ НИЖЕ	
+	{ Menu.SetPWR=0;
+				if(SW3==TRUE)	{cnt_SW0++; SW3=FALSE;}
+				max_min[cnt_SW0-1][0]=delta_min;
+	}
+	
+	
+
+		
+}
+if(cnt_SW0==3) {
+delta_min=	(max_min[1][0]+max_min[2][0]+max_min[3][0])/3;
+	
+	delta_min=delta_min-Tstp;// 0.123...
+	Limit_delt=Limit_delt- delta_min;
+	
+	for(int r=0;r<=3;r++)
+	{
+	max_min[r][0]=0;
+	}
+		delta_min=0;
+	delta_max=-22;
+	
+	cnt_SW0=0;
+	
+}
+
+if(cnt_SW0==4) {
+	cnt_SW0++;
+	
+	
+}
+
+
+
+*/
+
+return -1;
+
+}
+//******************************
+ int search_polka2(double *Tc, double *Ts, double *Plka, double *Toff,int *Thold,_Bool *On)
+{
+	volatile	double Tcur =*Tc;
+	        double Tstp =*Ts;
+          double T_off  = *Toff;
+        //  double Pl =*Plka;//	 =*Plka;
+          double averege;	
+             int iTime_hol_polka = *Thold;	
+	int stat=0;
+	        // _Bool Sw =*On;
+ double max_amplitude,min_amplitude;
+
+	if(delta_min > pre_Tcur)delta_min=pre_Tcur;
+
+	delta=	pre_Tcur - Menu.TemperStop;
+if(delta>=1){delta_min = Tcur;
+	             Limit_delt=0.4;
+               SW6=TRUE; 
+               SW3=TRUE;
+               SW4=FALSE;
+                SW0=1;
+               SW1=1;}
+
+	if(delta_min > pre_Tcur)delta_min=pre_Tcur;						 
+ 
+//1****************  сделать провал*************************************
+if(SW0==1)// &&  (SW2=1)&&(SW0==TRUE))// && ( raznost_polka_tcar>0.07)) //max amplitude
+{ 
+	if(SW1==1)
+			{				
+				if((SW6==1)&&(SW7==0))//sarter redy
+					if(delta >= Limit_delt)
+					  { MotorStart;
+					  	flag_otladka=1;
+						}
+					else  
+						 MotorStop;// дальше стоп.
+					
+				if(delta < Limit_delt)// инерция
+					if(delta_min < pre_Tcur)// 
+					{	Limit_delt=Limit_delt+fabs(delta);
+							
+								  SW1=0;
+					}
+				}
+	else if(SW1==0)
+			{	
+				if((SW6==TRUE)&&(SW7==FALSE))//sarter redy
+					if(delta >= Limit_delt)
+					  { MotorStart;
+					  	flag_otladka=11;
+						}
+					else  
+						 MotorStop;// дальше стоп.
+					
+					if((delta_min-fabs(Menu.TemperStop)<=0.07)) //искомая полка
+					  SW0=0;
+					
+			}
+					
+		else 	
+			MotorStop;//		
+				
+}
+
+
+/*else if((SW0==0)&&(pre_Tcur > Menu.TemperStop) && (delta >=0.25))//&&(SW0==TRUE))// && ( raznost_polka_tcar>0.07)) //max amplitude
+{
+	if((SW6==TRUE)&&(SW7==FALSE))//&& (adc_pa1 <=500))//sarter 
+				{MotorStart;SW5=FALSE;flag_otladka=2;	
+				
+				}
+}*/
+
+if(SW0==0)
+{
+if((delta>=-0.07)&&(delta<0.3))
+//else	if((SW0==0)&&(pre_Tcur <= Menu.TemperStop+0.1)&&(delta>=-0.13)/*&&(delta<=0.3)*/)// && ( raznost_polka_tcar>0.07)) //max amplitude
+	{ //Menu.SetPWR=2002;
+		if(delta>=0.12)
+		{adjust( 20, 20,2003,00);flag_otladka=31;	}// 14.26
+		else
+		{adjust( 14, 20,2003,00);flag_otladka=3;}
+	//	SW0=FALSE;
+	} 
+	
+
+	 else
+	{ MotorStop;Menu.SetPWR=0; 	flag_otladka=4;SW6=TRUE; SW7=FALSE;	}
+	
+} 
+
+//************************************************	
+	if((adc_pa1>=1100) && (SW6==TRUE))
+									{ SW6=FALSE;
+															SW7=TRUE;	
+  													     				 Start;	
+									//	for(int t=0;t<10000;t++);
+																					delay_ms(800); 
+																					Stop;	
+											               	delay_ms(500); 
+									starter_sec=0;
+									}
+
+ //if((adc_pa1>1000)&& (SW6==FALSE) && (starter_sec>=3))// && (starter_sec>0)&& (starter_sec<=2))
+ // {Stop;MotorStop; SW6=FALSE; SW7=FALSE;}//Menu.SetPWR=0;
+	
+ if((adc_pa1 <= 550) && (starter_sec>=5))//&& (SW6==FALSE))
+{	SW6=TRUE;SW7=FALSE;starter_sec=0;}
+
+
+//if((adc_pa1 >= 600) && (adc_pa1 <= 1000))
+//{	/*SW6=TRUE;*/SW7=FALSE;starter_sec=0;}
+
+else ;	
+//**************************************************
+
+	
+	 if((fabs(pre_Tcur-Tcur) >0.07))
+  							pre_Tcur=Tcur;	
+	
+
+return -1;
+
+}
+
+int amp(double *Tc, double *Ts, double *Toff)
+{
+	double Tcur =*Tc;
+	double Tstp =*Ts;
+  double T_off  = *Toff;
+	
+if(delta> 0.5){SW4=0; SW0=0;delta_min=0;	}
+	 if((fabs(pre_Tcur-Tcur) >0.06))
+  							pre_Tcur=Tcur;		
+
+	
+delta=	pre_Tcur - (-0.5);//Menu.TemperStop;//+0.1;
+ //if(delta_min > pre_Tcur)delta_min=pre_Tcur;	
+	/*if(delta_max < pre_Tcur)delta_max=pre_Tcur;
+
+	if(((SW6==TRUE)&&(SW7==FALSE))&& (SW3==0))//sarter redy
+	      {	if(delta > 0.1)
+					  { MotorStart;// motor
+					  	flag_otladka=11;
+							
+						}
+					else  
+					{ MotorStop;SW3=1;SW4=0;delta_max=-111;}// дальше стоп.
+				}				
+	 
+if(SW3==1)
+ {
+	  
+ if(delta_min < pre_Tcur)  
+	 {                              // (pre_Tcur-pre_Tcur2)<0 plus
+		 
+			 if((delta>= 0) &&(SW4==0)) //	 if((delta>= 0) && (delta<=0.13)
+			 {  MotorStart; SW4=1; }
+			 else if((SW4==1)&& (delta<0.13))
+			 { MotorStop;SW3=0;delta_min=0;}
+			 
+		 
+	 }
+
+ }
+	*/
+	
+	
+	
+	if((Tcur!=pre_Tcur2))
+	   prey_temper=Tcur-pre_Tcur2;
+	 
+	//prey_temper=delta-prev_delta;
+	
+	//if(((SW6==TRUE)&&(SW7==FALSE)))//&& (SW3==0))//sarter redy
+	      {	if((delta >=0.12) &&(prey_temper>=0))
+					  { MotorStart;// motor
+					  	flag_otladka=11;
+							 cnt_polka=0;
+						}
+					else if((delta<=0.13)&&(cnt_polka>=1) && (prey_temper<=0))	
+					{ MotorStop; }
+				// else 
+				//  MotorStop;// дальше стоп.
+				 	  
+				}		
+	
+					
+		/*
+				
+				
+	if(((SW6==TRUE)&&(SW7==FALSE)))//&& (SW3==0))//sarter redy
+	      {	if(delta >=0)
+					  { MotorStart;// motor
+					  	flag_otladka=11;
+							SW1=0; 
+						}
+				 
+					else //if((delta<=0.06) && (SW1==1))
+					{ MotorStop;}// дальше стоп.
+				//	else 
+				//	{SW1=1; }
+				}					
+				
+				
+				
+				
+				
+				*/			
+					
+					
+					
+//********************************************				
+if((adc_pa1>=1100) && (SW6==TRUE))
+									{ SW6=FALSE;
+															SW7=TRUE;	
+  													     				 Start;	
+									//	for(int t=0;t<10000;t++);
+																					delay_ms(800); 
+																					Stop;	
+											               	delay_ms(500); 
+									starter_sec=0;
+									}
+
+ if((adc_pa1 <= 550) && (starter_sec>=5))//&& (SW6==FALSE))
+{	SW6=TRUE;SW7=FALSE;starter_sec=0;}					
+//**************************************************					
+					
+	
+
+ //if(( cnt_run - starter_second) >= 1)//&&(SW0 ==1))
+ //{     pre_Tcur2=Tcur;cnt_run=0;starter_second=0;}	
+ 
+  pre_Tcur2=Tcur;
+ //if(prev_delta!=delta)
+ //prev_delta= delta;
+ 
+return 0;
+ 
+ 
+
+}
+//******************************
+int search_minmax(double *Tc,double *Tst,double *Tmax,double *Tmin)
+{
+	double Tstp =*Tst;	
+	double Tcur =*Tc;	
+	double T_max=*Tmax;
+	double T_min=*Tmin;
+	
+	delta =	Tcur-Menu.TemperStop; 
+// поиск идёт всегда сверху вниз.
+	if(Tcur>Menu.TemperStop)
+	{ Menu.SetPWR =2000;
+	  delta_max=0;
+		Delta_stop_before=0;
+	  SW3=TRUE;	
+	}
+	else if((delta==0)&& (SW3==TRUE))
+	{SW3=FALSE;
+	//подсчитать переходы
+	Cnt_points++;
+	}
+		else//определить проскок
+	{		Menu.SetPWR =0;
+	  
+	if(delta_max>Tcur)
+		{ delta_max=Tcur;
+		// Del_stop_before=fabs(delta_max-	T_stop);
+	  }
+		 
+ }
+	
+	
+	//*********************************
+	
+	
+	
+		// заполнить массив 
+			if(Tcur>pre_Tcur)// + maximum
+					{ if(max_min[Cnt_points][0]!=0)
+									if(Tcur > max_min[Cnt_points][0])//cmd 0x74
+									{ max_min[Cnt_points][0]=Tcur;
+										T_max=max_min[Cnt_points][0];
+									}
+									else;
+						else
+										 max_min[Cnt_points][0]=Tcur;
+					}
+					
+			else if(Tcur<pre_Tcur)// - minimum
+					{
+						if(max_min[Cnt_points][1]!=0)
+						if(Tcur < max_min[Cnt_points][1]) //cmd 0x73
+							{ max_min[Cnt_points][1]=Tcur;
+								T_min=max_min[Cnt_points][1];		
+							}
+							else;
+							
+							else
+								 max_min[Cnt_points][1]=Tcur;	
+	        }
+			else;
+		
+		if(Tcur!=pre_Tcur)
+		pre_Tcur=Tcur ;	//  глобальные переменные
+	
+ 
+					
+					
+  if(Cnt_points==avegage_count) 	// заполнить массив		
+		{		
+				// найти среднее из массива. c 1 по 3
+				//	Tmax
+				//	Tmin
+	      for(int i=1;i<=Cnt_points-1 ;i++) // 0- не стабильный
+					{
+					 T_max=T_max+max_min[i][0];
+					 T_min=T_min+max_min[i][1];
+					}
+				T_min=T_min/(Cnt_points-1);
+				T_max=T_max/(Cnt_points-1);
+				//*********************************************************	
+				*Tmin=T_min; //не понятно, почему не передает черезь функцию ????
+				*Tmax=T_max;
+		 
+					Cnt_points=0;
+				return	1 ;// цикл анализа закончен.
+				 	
+		}				
+return 0;	
+	
+}
+
+
+
+
+//***********************************
+int Starter(uint16_t ADC, int status)
+{				
+										
+  	if((adc_pa1>=TOK_ZAPUSKA))// && (Enbl_Starter==TRUE))  
+													{ //Enbl_Starter=TRUE;  
+														//	SW7=TRUE;	
+  													       if(Enbl_Starter==TRUE)
+																				{ //Stop;	
+																				 Start;	
+																					DELAY200;
+																					Stop;	
+																				DELAY300;
+																				 	starter_second=0;
+																					Enbl_Starter=FALSE;
+																				}
+														 		
+													      	if((starter_second>=3) && (Enbl_Starter==FALSE))
+																				{ 	//	Enbl_Starter=FALSE;
+																					Menu.SetPWR=0;
+																					Stop;	
+																					DELAY1000;
+																							DELAY1000;
+																			//		DELAY500; 
+																				starter_second=0;	
+																			
+																					
+																					//cnt_work_pump=100;
+																				}	
+
+																/*if(starter_second>=3)
+																				{Enbl_Starter=FALSE;
+																					Menu.SetPWR=0;
+																					cnt_work_pump=20;
+																					Stop;
+																				starter_second=0;	
+																			//	 	
+																				}	*/		
+													 return 3;
+													}
+										  	
+											 
+	             
+	 
+/*else	if((adc_pa1 > TOK_RABOTY) && (adc_pa1 < TOK_RABOTY_MAX))	
+	{ starter_second=0;SW7=FALSE;
+	Enbl_Starter=FALSE;
+ 
+		return 1; 	
+	
+	} */ //работает
+	
+	
+else	if(adc_pa1<=TOK_POKOJA)// not working overtemperature hating
+	{
+		if(starter_second>=4)
+		{starter_second=0;
+		 Enbl_Starter=TRUE;
+	 return 2;
+		}
+	}
+else			
+return -1; 			
+}
+//***********************
+int  TestStarter(uint16_t ADC)
+{
+if(SW8==1)	
+Menu.SetPWR=2000;
+if(SW8==0)
+Menu.SetPWR=0;
+
+
+
+	if((adc_pa1>=TOK_ZAPUSKA))// && (Enbl_Starter==TRUE))  
+													{   Start;	
+															DELAY500;
+															Stop;	
+														DELAY500;
+													}
+
+return 0;
+
+}
+	
+
+
+
+
+
+

@@ -1,0 +1,45 @@
+/*
+ * onewire.h
+ *
+ *  Version 1.0.1
+ */
+
+#ifndef ONEWIRE_H_
+#define ONEWIRE_H_
+
+// для разных процессоров потребуется проверить функцию OW_Init
+// на предмет расположения ножек USART
+#include "stm32f10x.h"
+
+// выбираем, на каком USART находится 1-wire
+#define OW_USART1
+//#define OW_USART2
+//#define OW_USART3
+//#define OW_USART4
+
+
+// если нужно отдавать тики FreeRTOS, то раскомментировать
+//#define OW_GIVE_TICK_RTOS
+
+// первый параметр функции OW_Send
+#define OW_SEND_RESET2		1
+#define OW_NO_RESET2		2
+
+// статус возврата функций
+#define OW_OK2			1
+#define OW_ERROR2		2
+#define OW_NO_DEVICE2	3
+
+#define OW_NO_READ2		0xff
+
+#define OW_READ_SLOT2	0xff
+
+
+//void OW_Init2(USART_TypeDef* USARTx) ;
+uint8_t OW_Init2(USART_TypeDef* USARTx);
+void OW_SendCommand2(USART_TypeDef* USARTx, const uint8_t *command, uint16_t len) ;
+uint8_t OW_Send2(USART_TypeDef* USARTx,uint8_t sendReset, uint8_t *command, uint8_t cLen, uint8_t *data, uint8_t dLen, uint8_t readStart);
+
+#endif /* ONEWIRE_H_ */
+
+

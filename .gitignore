@@ -1,0 +1,8 @@
+SwithcFrost/objects/
+P_regulator/Objects/
+SwithcFrost/HEX/
+SwithcFrost/bin/
+*.d
+*.o
+*.crf
+*.bin
