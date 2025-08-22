@@ -405,8 +405,8 @@ void adapt_offset(float tempAvr) {
     //else 
 		if (n >= CYCLE_TIME) {
         avg_error_for_offset = err_sum_for_offset / n;
-        if (avg_error_for_offset > 0.1f) compressor_time_offset += 1;
-        else if (avg_error_for_offset < -0.1f) compressor_time_offset -= 2;
+        if (avg_error_for_offset > 0.09f) compressor_time_offset += 1;
+        else if (avg_error_for_offset < -0.09f) compressor_time_offset -= 2;
         if (compressor_time_offset < 10) compressor_time_offset = 10;
         if (compressor_time_offset > 60) compressor_time_offset = 60;
         err_sum_for_offset = 0;
@@ -1039,8 +1039,8 @@ void HID_Receive(uint8_t *Buff, uint8_t Size) // Получен новый па�
 	// Собираем float из 4 байт (предполагаем little-endian)
 	union {
 			float f;
-		  uint32_t u;
-			uint8_t b[4];
+		  int32_t u;
+			int8_t b[4];
 	} converter;
 
 
