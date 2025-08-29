@@ -341,7 +341,7 @@
               <MiscControls></MiscControls>
               <Define>STM32F10X_MD USE_STDPERIPH_DRIVER</Define>
               <Undefine></Undefine>
-              <IncludePath>.\Libraries\CMSIS\CM3\CoreSupport;.\Libraries\STM32F10x_StdPeriph_Driver\inc;.\Libraries\STM32F10x_StdPeriph_Driver\src;.\Libraries\CMSIS\CM3\DeviceSupport\ST\STM32F10x;.\USB\STM32_USB-FS-Device_Driver\inc;.\USB\STM32_USB-FS-Device_Driver\src;.\USB\inc;.\USB\src;.\SPI2;.\I2C;.\Sources;.\Sources\AT24C32_source;.\Encoder;..\P_regulator;..\P_regulator\Objects;.\FontsRus;.\1306</IncludePath>
+              <IncludePath>.\Libraries\CMSIS\CM3\CoreSupport;.\Libraries\STM32F10x_StdPeriph_Driver\inc;.\Libraries\STM32F10x_StdPeriph_Driver\src;.\Libraries\CMSIS\CM3\DeviceSupport\ST\STM32F10x;.\USB\STM32_USB-FS-Device_Driver\inc;.\USB\STM32_USB-FS-Device_Driver\src;.\USB\inc;.\USB\src;.\SPI2;.\I2C;.\Sources;.\Sources\AT24C32_source;.\Encoder;.\P_regulator;..\P_regulator\Objects;.\FontsRus;.\1306</IncludePath>
             </VariousControls>
           </Cads>
           <Aads>

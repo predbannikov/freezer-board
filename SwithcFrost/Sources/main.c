@@ -40,6 +40,8 @@ UPG 22.03.23
 //#include "fonts.h"
 //#include "max31865short.h" 
 //#include "encoderTIM2_PA0_PA1.h"
+
+//#include "Preg.h"
  
 //#include "OLED_Fonts.h"
 
@@ -239,7 +241,7 @@ volatile int flag_wait=0;
 volatile int main_menu=0;	
 //u16 Get_Adc(u8 ch); //ПОСТОЯННО БРАТЬ ЗНАЧЕНИЕ В ТАЙМЕРЕ.
 char GetMessureDS1820_adr2(char *adr,char *tmp,int num);
-volatile uint16_t adc_pa0,adc_pa1;
+volatile uint16_t adc_pa0,adc_pa1, adc_pa1_;
 uint32_t temper_hex1,temper_hex2,temper_hex_l,temper_hex_h,temper_dec,temper_hex_half_gradus=0;
 char get_buf[20];
 //char get_buf2[20];
@@ -801,7 +803,7 @@ SSD1306_Fill(SSD1306_COLOR_BLACK);
 	
 	
 
-		/*
+	//MY	/* 
 if(FirstTime==TRUE)
 {  
 		  Menu.SetPWR=2000;   
@@ -849,7 +851,8 @@ if(FirstTime==TRUE)
 					}
 	  
 
-		*/
+
+	//MY			*/
  
 }
 //********************************************
@@ -1983,6 +1986,8 @@ else if(flag_eprom_slop_intercept==1)//for slop if was cdm 0x22
 TIM_TimeBaseInitTypeDef  TIM_TimeBaseStructure;
 int main(void)
 {
+	
+
 	 HSE_SetSysClk( RCC_PLLMul_9 );
 	 InitTim4();
  // TIM3_PWM_Init22(1999,719);//(100,719)=100*0,000010= 1 ms
@@ -2097,6 +2102,8 @@ cnt_SW0=0;
 BlueON;
 while(1)
 	  { //	IWDG_ReloadCounter();
+			Start;
+			adc_pa1 = Get_Adc(ADC_Channel_3);//	measureCurrent(); //MY
 if(	main_menu==0)	
 	             //****************************
 							 if(activ_menu)
